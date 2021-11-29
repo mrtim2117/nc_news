@@ -1,55 +1,135 @@
 const db = require("../connection");
+const format = require("pg-format");
 
 const seed = (data) => {
   const { articleData, commentData, topicData, userData } = data;
 
-  // 1. create tables
+  // (1) Start by dropping tables....
+  // Order significant, owing to referential integrity
   return db
+
     .query(`DROP TABLE IF EXISTS comments;`)
     .then(() => {
       return db.query(`DROP TABLE IF EXISTS articles;`);
     })
     .then(() => {
-      return db.query(`DROP TABLE IF EXISTS topics;`);
-    })
-    .then(() => {
-      return db.query(`DROP TABLE IF EXISTS users;`);
-    })
-    .then(() => {
-      return db.query(`CREATE TABLE users (
-        username VARCHAR(20) PRIMARY KEY,
-        avatar_url VARCHAR(100),
-        name VARCHAR(50) NOT NULL
-      );`);
-    })
-    .then(() => {
-      return db.query(`CREATE TABLE topics (
-        slug VARCHAR(30) PRIMARY KEY,
-        description VARCHAR(255)
-      );`);
-    })
-    .then(() => {
-      return db.query(`CREATE TABLE articles (
-        article_id SERIAL PRIMARY KEY,
-        title VARCHAR (100) NOT NULL,
-        body TEXT,
-        votes INT DEFAULT 0,
-        author VARCHAR(20) REFERENCES users(username),
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      );`);
-    })
-    .then(() => {
-      return db.query(`CREATE TABLE comments(
-        comment_id SERIAL PRIMARY KEY,
-        author VARCHAR(20) REFERENCES users(username),
-        article_id INT REFERENCES articles(article_id),
-        votes INT DEFAULT 0,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        body TEXT
-      );`);
-    });
+      // No depenendies on users and topics at this point,
+      // so drop them both in one concurrent hit
+      const dropUsersPromise = db.query(`DROP TABLE IF EXISTS users;`);
+      const dropTopicsPromise = db.query(`DROP TABLE IF EXISTS topics;`);
 
-  // 2. insert data
+      return Promise.all([dropUsersPromise, dropTopicsPromise]);
+    })
+    .then(() => {
+      // (2) Now start creating tables
+      // - users and topics with no initial dependencies
+      const createUsersPromise = db.query(`
+        CREATE TABLE users (
+          username VARCHAR(20) PRIMARY KEY,
+          name VARCHAR(50) NOT NULL,
+          avatar_url VARCHAR(200)
+        );
+      `);
+
+      const createTopicsPromise = db.query(`
+        CREATE TABLE topics (
+          slug VARCHAR(30) PRIMARY KEY,
+          description VARCHAR(255)
+        );
+      `);
+
+      return Promise.all([createUsersPromise, createTopicsPromise]);
+    })
+    .then(() => {
+      return db.query(`
+        CREATE TABLE articles (
+          article_id SERIAL PRIMARY KEY,
+          title VARCHAR (100) NOT NULL,
+          body TEXT NOT NULL,
+          votes INT DEFAULT 0 NOT NULL,
+          topic VARCHAR(30) REFERENCES topics(slug),
+          author VARCHAR(20) REFERENCES users(username),
+          created_at TIMESTAMP DEFAULT NOW()
+        );
+      `);
+    })
+    .then(() => {
+      return db.query(`
+        CREATE TABLE comments(
+          comment_id SERIAL PRIMARY KEY,
+          author VARCHAR(20) REFERENCES users(username),
+          article_id INT REFERENCES articles(article_id),
+          votes INT DEFAULT 0 NOT NULL,
+          body TEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT NOW()
+        );
+      `);
+    })
+    .then(() => {
+      // (3) Insert data - again, order is important
+      // Starting with user and topic base data
+      const formattedUserData = userData.map((user) => {
+        return [user.username, user.name, user.avatar_url];
+      });
+      const formattedTopicData = topicData.map((topic) => {
+        return [topic.slug, topic.description];
+      });
+
+      const queryUserInsert = format(
+        `INSERT INTO users (username, name, avatar_url) VALUES %L RETURNING *;
+      `,
+        formattedUserData
+      );
+      const queryTopcsInsert = format(
+        `INSERT INTO topics (slug, description) VALUES %L RETURNING *;
+      `,
+        formattedTopicData
+      );
+
+      const userInsertPromise = db.query(queryUserInsert);
+      const topicInsertPromise = db.query(queryTopcsInsert);
+
+      return Promise.all([userInsertPromise, topicInsertPromise]);
+    })
+    .then(() => {
+      const formattedArticleData = articleData.map((article) => {
+        return [
+          article.title,
+          article.body,
+          article.votes,
+          article.topic,
+          article.author,
+          article.created_at,
+        ];
+      });
+
+      const queryString = format(
+        `INSERT INTO ARTICLES (title, body, votes, topic, author, created_at) VALUES %L RETURNING *;
+        `,
+        formattedArticleData
+      );
+
+      return db.query(queryString);
+    })
+    .then(() => {
+      formattedCommentData = commentData.map((comment) => {
+        return [
+          comment.author,
+          comment.article_id,
+          comment.votes,
+          comment.body,
+          comment.created_at,
+        ];
+      });
+
+      const queryString = format(
+        `INSERT INTO comments (author, article_id, votes, body, created_at) VALUES %L RETURNING *;
+        `,
+        formattedCommentData
+      );
+
+      return db.query(queryString);
+    });
 };
 
 module.exports = seed;
