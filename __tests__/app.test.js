@@ -187,3 +187,13 @@ describe("PATCH /api/articles/:article_id", () => {
       });
   });
 });
+describe("/GET /api/articles", () => {
+  test.only("Returns and array of articles with correct structure", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then((res) => {
+        console.log("test: ", res.body);
+      });
+  });
+});

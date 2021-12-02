@@ -51,4 +51,18 @@ const updateArticleById = (article_id, updateObject) => {
     });
 };
 
-module.exports = { selectArticleById, updateArticleById };
+const selectArticles = () => {
+  return db
+    .query(
+      `
+      SELECT articles.author, title, articles.article_id, articles.body, topic, articles.created_at, articles.votes, count(comments.article_id) AS comment_count
+      FROM articles LEFT JOIN comments ON articles.article_id = comments.article_id
+      GROUP BY articles.article_id;
+    `
+    )
+    .then((response) => {
+      return response.rows;
+    });
+};
+
+module.exports = { selectArticleById, updateArticleById, selectArticles };
