@@ -188,12 +188,117 @@ describe("PATCH /api/articles/:article_id", () => {
   });
 });
 describe("/GET /api/articles", () => {
-  test.only("Returns and array of articles with correct structure", () => {
+  test("Returns and array of articles with correct structure", () => {
     return request(app)
       .get("/api/articles")
       .expect(200)
       .then((res) => {
-        console.log("test: ", res.body);
+        expect(Array.isArray(res.body.articles)).toBe(true);
+        expect(res.body.articles.length).toBe(12);
+        res.body.articles.forEach((article) => {
+          expect(article).toEqual(
+            expect.objectContaining({
+              author: expect.any(String),
+              title: expect.any(String),
+              article_id: expect.any(Number),
+              topic: expect.any(String),
+              created_at: expect.any(String),
+              votes: expect.any(Number),
+              comment_count: expect.any(Number),
+            })
+          );
+        });
+      });
+  });
+  test("Order defaults to descending created_at", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then((res) => {
+        expect(res.body.articles).toBeSorted({
+          key: "created_at",
+          descending: true,
+        });
+      });
+  });
+  test("Sort by property other than 'created_at' and default order", () => {
+    return request(app)
+      .get("/api/articles?sort_by=article_id")
+      .expect(200)
+      .then((res) => {
+        expect(res.body.articles).toBeSorted({
+          key: "article_id",
+          descending: true,
+        });
+      });
+  });
+  test("Sort by property other than 'created_at' and non-default order", () => {
+    return request(app)
+      .get("/api/articles?sort_by=votes&order=asc")
+      .expect(200)
+      .then((res) => {
+        expect(res.body.articles).toBeSorted({
+          key: "votes",
+          descending: false,
+        });
+      });
+  });
+  test("Sort by property other than 'created_at' and explict desc order", () => {
+    return request(app)
+      .get("/api/articles?sort_by=comment_count&order=desc")
+      .expect(200)
+      .then((res) => {
+        expect(res.body.articles).toBeSorted({
+          key: "comment_count",
+          descending: true,
+        });
+      });
+  });
+  test("Filtered by topic", () => {
+    return request(app)
+      .get("/api/articles?topic=mitch")
+      .expect(200)
+      .then((res) => {
+        expect(res.body.articles).toBeSorted({
+          key: "created_at",
+          descending: true,
+        });
+        expect(res.body.articles.length).toBe(11);
+        res.body.articles.forEach((article) => {
+          expect(article.topic).toBe("mitch");
+        });
+      });
+  });
+  test("404 and no articles where valid topic has no articles associated", () => {
+    return request(app)
+      .get("/api/articles?topic=paper")
+      .expect(404)
+      .then((res) => {
+        expect(res.body.msg).toBe("No articles found");
+      });
+  });
+  test("400 Invalid topic for non-existent topic", () => {
+    return request(app)
+      .get("/api/articles?topic=sausages")
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe("Invalid topic");
+      });
+  });
+  test("400 Invalid sort field for non-existant propert", () => {
+    return request(app)
+      .get("/api/articles?sort_by=sausages")
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe("Invalid sort field");
+      });
+  });
+  test("400 for valid sort_by and invalid sort order", () => {
+    return request(app)
+      .get("/api/articles?sort_by=article_id&order=dave")
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe("Invalid sort order");
       });
   });
 });

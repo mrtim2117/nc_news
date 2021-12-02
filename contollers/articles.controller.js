@@ -30,7 +30,9 @@ const patchArticlebyId = (req, res, next) => {
 };
 
 const getArticles = (req, res, next) => {
-  return selectArticles()
+  const { sort_by, order, topic } = req.query;
+
+  return selectArticles(sort_by, order, topic)
     .then((articles) => {
       return res.status(200).send({ articles });
     })

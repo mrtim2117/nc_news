@@ -29,6 +29,12 @@
   },
   "devDependencies": {
     "jest": "^27.4.2",
+    "jest-sorted": "^1.0.12",
     "supertest": "^6.1.6"
+  },
+  "jest": {
+    "setupFilesAfterEnv": [
+      "jest-sorted"
+    ]
   }
 }
