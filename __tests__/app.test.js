@@ -9,12 +9,13 @@ beforeEach(() => seed(testData));
 afterAll(() => db.end());
 
 describe("GET /api", () => {
-  test("Returns 'All is well!'", () => {
+  test.only("Returns 'All is well!'", () => {
     return request(app)
       .get("/api")
       .expect(200)
       .then((response) => {
-        expect(response.body.msg).toBe("All is well!");
+        // expect(response.body.msg).toBe("All is well!");
+        console.log(response.body.endpoints);
       });
   });
 });
@@ -299,6 +300,103 @@ describe("/GET /api/articles", () => {
       .expect(400)
       .then((res) => {
         expect(res.body.msg).toBe("Invalid sort order");
+      });
+  });
+});
+describe("GET /api/articles/:article_id/comments", () => {
+  test("Correct number of comments returned in desired structure for article_id", () => {
+    return request(app)
+      .get("/api/articles/9/comments")
+      .expect(200)
+      .then((res) => {
+        expect(Array.isArray(res.body.comments)).toBe(true);
+        expect(res.body.comments.length).toBe(2);
+        res.body.comments.forEach((comment) => {
+          expect(comment).toEqual(
+            expect.objectContaining({
+              comment_id: expect.any(Number),
+              votes: expect.any(Number),
+              created_at: expect.any(String),
+              author: expect.any(String),
+              body: expect.any(String),
+            })
+          );
+        });
+      });
+  });
+  test("Returns 404 'No comments found' for valid article with no comments", () => {
+    return request(app)
+      .get("/api/articles/12/comments")
+      .expect(404)
+      .then((res) => {
+        expect(res.body.msg).toBe("No comments found");
+      });
+  });
+  test("Returns 404 'article not found' for non-existent article_id", () => {
+    return request(app)
+      .get("/api/articles/215/comments")
+      .expect(404)
+      .then((res) => {
+        expect(res.body.msg).toBe("article not found");
+      });
+  });
+  test("Returns 400 'Request invalid' for incorrect article_id data type", () => {
+    return request(app)
+      .get("/api/articles/sausages/comments")
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe("Request invalid");
+      });
+  });
+});
+describe("POST /api/articles/:article_id/comments", () => {
+  test("Successfully creates new comment for article_id", () => {
+    return request(app)
+      .post("/api/articles/2/comments")
+      .send({ username: "icellusedkars", body: "Here are some comments" })
+      .expect(201)
+      .then((res) => {
+        const comment = res.body.comment;
+        expect(comment.author).toBe("icellusedkars");
+        expect(comment.body).toBe("Here are some comments");
+        expect(comment.article_id).toBe(2);
+        expect(comment.votes).toBe(0);
+        expect(comment).toEqual(
+          expect.objectContaining({
+            comment_id: expect.any(Number),
+            created_at: expect.any(String),
+          })
+        );
+      });
+  });
+  // 404 Can't post to non-existent article_id
+  // 400 Invalid username
+  // Additional properties are ignored and not inserted
+  // Missing username or body fails insert/post
+});
+describe("DELETE /api/comments/:comment_id", () => {
+  test("Responds with 204 and no content on successful deletion", () => {
+    return request(app)
+      .delete("/api/comments/2")
+      .expect(204)
+      .then((res) => {
+        expect(res.body).toEqual({});
+      });
+  });
+  test("Responds with 404 for non-existent comment_id", () => {
+    return request(app)
+      .delete("/api/comments/200")
+      .expect(404)
+      .then((res) => {
+        expect(res.body.msg).toEqual("No comment found");
+      });
+  });
+  test("Responds with 400 for wrong data type comment_id", () => {
+    return request(app)
+      .delete("/api/comments/sausages")
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe("Request invalid");
       });
   });
 });

@@ -1,7 +1,11 @@
+const listEndpoints = require("../models/api.model");
+
 const getApi = (req, res, next) => {
-  res
-    .status(200)
-    .send({ msg: "All is well!" })
+  return listEndpoints()
+    .then((endpoints) => {
+      // res.status(200).send({ msg: "All is well!" });
+      res.status(200).send({ endpoints: endpoints });
+    })
     .catch((err) => {
       next(err);
     });

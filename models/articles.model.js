@@ -123,4 +123,19 @@ const selectArticles = (sort_by = "created_at", order = "DESC", topic) => {
     });
 };
 
-module.exports = { selectArticleById, updateArticleById, selectArticles };
+const checkIfArticleExists = (article_id) => {
+  return db
+    .query(`SELECT COUNT (*) FROM articles WHERE article_id = $1`, [article_id])
+    .then((response) => {
+      if (parseInt(response.rows[0].count) === 0) {
+        return Promise.reject({ status: 404, msg: "article not found" });
+      }
+    });
+};
+
+module.exports = {
+  selectArticleById,
+  updateArticleById,
+  selectArticles,
+  checkIfArticleExists,
+};
