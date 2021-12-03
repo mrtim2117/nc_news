@@ -5,7 +5,7 @@ const listEndpoints = () => {
   return fs
     .readFile(__dirname + "/../endpoints.json", "utf-8")
     .then((fileContent) => {
-      return fileContent;
+      return JSON.parse(fileContent);
     });
 };
 

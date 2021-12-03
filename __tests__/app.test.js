@@ -9,13 +9,12 @@ beforeEach(() => seed(testData));
 afterAll(() => db.end());
 
 describe("GET /api", () => {
-  test.only("Returns 'All is well!'", () => {
+  test("Returns list of endpoints supported", () => {
     return request(app)
       .get("/api")
       .expect(200)
       .then((response) => {
-        // expect(response.body.msg).toBe("All is well!");
-        console.log(response.body.endpoints);
+        expect(Object.keys(response.body.endpoints).length).toBe(8);
       });
   });
 });
@@ -369,10 +368,56 @@ describe("POST /api/articles/:article_id/comments", () => {
         );
       });
   });
-  // 404 Can't post to non-existent article_id
-  // 400 Invalid username
-  // Additional properties are ignored and not inserted
-  // Missing username or body fails insert/post
+  test("404 for attempting to post a comment to a non-existent article_id", () => {
+    return request(app)
+      .post("/api/articles/290/comments")
+      .send({ username: "icellusedkars", body: "Here are some comments" })
+      .expect(404)
+      .then((res) => {
+        expect(res.body.msg).toBe("article not found");
+      });
+  });
+  test("400 for attempting to post a comment under an invalid username", () => {
+    return request(app)
+      .post("/api/articles/1/comments")
+      .send({ username: "DodgyDave", body: "Here are some dodgy comments" })
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe("invalid user");
+      });
+  });
+  test("Successfully creates new comment for article_id and ignores additional properties posted", () => {
+    return request(app)
+      .post("/api/articles/2/comments")
+      .send({
+        username: "icellusedkars",
+        body: "Here are some comments",
+        votes: 5,
+      })
+      .expect(201)
+      .then((res) => {
+        const comment = res.body.comment;
+        expect(comment.author).toBe("icellusedkars");
+        expect(comment.body).toBe("Here are some comments");
+        expect(comment.article_id).toBe(2);
+        expect(comment.votes).toBe(0);
+        expect(comment).toEqual(
+          expect.objectContaining({
+            comment_id: expect.any(Number),
+            created_at: expect.any(String),
+          })
+        );
+      });
+  });
+  test("400 and fails insert when posting with missing username", () => {
+    return request(app)
+      .post("/api/articles/2/comments")
+      .send({ body: "Here are some comments for Mr Nobody" })
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe("missing data");
+      });
+  });
 });
 describe("DELETE /api/comments/:comment_id", () => {
   test("Responds with 204 and no content on successful deletion", () => {
