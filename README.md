@@ -4,9 +4,20 @@ https://tims-nc-news.herokuapp.com/api
 
 ## Background
 
-We will be building an API for the purpose of accessing application data programmatically. The intention here is to mimic the building of a real world backend service (such as reddit) which should provide this information to the front end architecture.
+Welcome to Tim's News API! The first of several learning projects undertaken on my journey back to the wonderful world of software development. Please feel free to explore the hosted version. Click on the link below to investigate the endpoints currently provided, and where to find them:
 
-Your database will be PSQL, and you will interact with it using [node-postgres](https://node-postgres.com/).
+https://tims-nc-news.herokuapp.com/api
+
+Note: This is a living, breathing project, and further endpoints will be added as time progresses.
+
+The the underlying database consists of a small number of relational tables hosted in Postgress. This is fronted with api code written in JavaScript, targetting Node.js. Connectivity between the two layers is implemented using [node-postgres](https://node-postgres.com/).
+
+Please follow the instructions below to clone the repo, then built and test your own version of the api.
+
+Minimum version requirements:
+
+- `Node.js` v16.10.0
+- `Postgres` v12.9
 
 ## Step 1 - Setting up your project
 
