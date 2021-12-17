@@ -4,8 +4,6 @@ const format = require("pg-format");
 const seed = (data) => {
   const { articleData, commentData, topicData, userData } = data;
 
-  // (1) Start by dropping tables....
-  // Order significant, owing to referential integrity
   return db
 
     .query(`DROP TABLE IF EXISTS comments;`)
@@ -13,16 +11,12 @@ const seed = (data) => {
       return db.query(`DROP TABLE IF EXISTS articles;`);
     })
     .then(() => {
-      // No depenendies on users and topics at this point,
-      // so drop them both in one concurrent hit
       const dropUsersPromise = db.query(`DROP TABLE IF EXISTS users;`);
       const dropTopicsPromise = db.query(`DROP TABLE IF EXISTS topics;`);
 
       return Promise.all([dropUsersPromise, dropTopicsPromise]);
     })
     .then(() => {
-      // (2) Now start creating tables
-      // - users and topics with no initial dependencies
       const createUsersPromise = db.query(`
         CREATE TABLE users (
           username VARCHAR(20) PRIMARY KEY,
@@ -66,8 +60,6 @@ const seed = (data) => {
       `);
     })
     .then(() => {
-      // (3) Insert data - again, order is important
-      // Starting with user and topic base data
       const formattedUserData = userData.map((user) => {
         return [user.username, user.name, user.avatar_url];
       });

@@ -80,16 +80,12 @@ const selectArticles = (sort_by = "created_at", order = "DESC", topic) => {
       return res.rows;
     })
     .then((topics) => {
-      // Wouldn't normally use string literal for SQL string,
-      // but pg forces us to - hence the above array checks!
       const sqlSelect = `SELECT articles.author, title, articles.article_id, articles.body, topic, articles.created_at, articles.votes, count(comments.article_id) AS comment_count `;
       const sqlFrom = `FROM articles LEFT JOIN comments ON articles.article_id = comments.article_id `;
       const sqlGroupBy = `GROUP BY articles.article_id `;
       const sqlOrderBy = `ORDER BY ${sort_by} ${order}; `;
       let sqlQuery = sqlSelect + sqlFrom;
 
-      // If we have a requested topic, ensure it's valid
-      // - again attempting to prevent SQL injection attacks
       if (topic) {
         const validTopics = topics.map((topicObj) => {
           return topicObj.slug;
@@ -105,7 +101,6 @@ const selectArticles = (sort_by = "created_at", order = "DESC", topic) => {
       sqlQuery += sqlGroupBy;
       sqlQuery += sqlOrderBy;
 
-      // Now finally retrieve the requested articles
       return db.query(sqlQuery).then((response) => {
         if (response.rows.length === 0) {
           return Promise.reject({
