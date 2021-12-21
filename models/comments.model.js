@@ -8,12 +8,6 @@ const selectCommentsByArticleId = (article_id) => {
       [article_id]
     )
     .then((response) => {
-      if (response.rows.length === 0) {
-        return Promise.reject({
-          status: 404,
-          msg: "No comments found",
-        });
-      }
       return response.rows;
     });
 };

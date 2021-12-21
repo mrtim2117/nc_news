@@ -269,7 +269,7 @@ describe("/GET /api/articles", () => {
         });
       });
   });
-  test.only("200 and empty articles array where valid topic has no articles associated", () => {
+  test("200 and empty articles array where valid topic has no articles associated", () => {
     return request(app)
       .get("/api/articles?topic=paper")
       .expect(200)
@@ -323,14 +323,12 @@ describe("GET /api/articles/:article_id/comments", () => {
         });
       });
   });
-  test.only("Returns 404 'No comments found' for valid article with no comments", () => {
+  test("Returns 200 and empty comments array for valid article with no comments", () => {
     return request(app)
       .get("/api/articles/12/comments")
       .expect(200)
       .then((res) => {
-        // expect(res.body.msg).toBe("No comments found");
         expect(res.body.comments).toEqual([]);
-        console.log(res.body);
       });
   });
   test("Returns 404 'article not found' for non-existent article_id", () => {
@@ -379,11 +377,11 @@ describe("POST /api/articles/:article_id/comments", () => {
         expect(res.body.msg).toBe("article not found");
       });
   });
-  test("400 for attempting to post a comment under an invalid username", () => {
+  test("404 for attempting to post a comment under an invalid username", () => {
     return request(app)
       .post("/api/articles/1/comments")
       .send({ username: "DodgyDave", body: "Here are some dodgy comments" })
-      .expect(400)
+      .expect(404)
       .then((res) => {
         expect(res.body.msg).toBe("invalid user");
       });
