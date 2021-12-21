@@ -92,5 +92,10 @@
     "description": "deletes the comment with specified :comment_id",
     "queries": ["N/A"],
     "exampleResponse": {}
+  },
+  "GET /api/users": {
+    "description": "serves an array of all users",
+    "queries": ["N/A"],
+    "exampleResponse": { "users": [{ "username": "butter_bridge" }] }
   }
 }

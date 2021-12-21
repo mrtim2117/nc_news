@@ -14,7 +14,7 @@ describe("GET /api", () => {
       .get("/api")
       .expect(200)
       .then((response) => {
-        expect(Object.keys(response.body.endpoints).length).toBe(8);
+        expect(Object.keys(response.body.endpoints).length).toBe(9);
       });
   });
 });
@@ -442,6 +442,25 @@ describe("DELETE /api/comments/:comment_id", () => {
       .expect(400)
       .then((res) => {
         expect(res.body.msg).toBe("Request invalid");
+      });
+  });
+});
+describe("/api/users", () => {
+  test("responds with array of user objects, each with a username property", () => {
+    return request(app)
+      .get("/api/users")
+      .expect(200)
+      .then((res) => {
+        expect(Array.isArray(res.body.users)).toBe(true);
+        expect(res.body.users.length).toBe(4);
+        res.body.users.forEach((user) => {
+          expect(user).toEqual(
+            expect.objectContaining({
+              username: expect.any(String),
+            })
+          );
+        });
+        console.log("Test: ", res.body);
       });
   });
 });
