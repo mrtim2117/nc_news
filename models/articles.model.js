@@ -92,7 +92,7 @@ const selectArticles = (sort_by = "created_at", order = "DESC", topic) => {
         });
 
         if (!validTopics.includes(topic)) {
-          return Promise.reject({ status: 400, msg: "Invalid topic" });
+          return Promise.reject({ status: 404, msg: "Invalid topic" });
         }
 
         sqlQuery += `WHERE articles.topic = '${topic}' `;
@@ -102,18 +102,13 @@ const selectArticles = (sort_by = "created_at", order = "DESC", topic) => {
       sqlQuery += sqlOrderBy;
 
       return db.query(sqlQuery).then((response) => {
-        if (response.rows.length === 0) {
-          return Promise.reject({
-            status: 404,
-            msg: "No articles found",
-          });
-        } else {
+        if (response.rows.length > 0) {
           response.rows.forEach((row) => {
             row.comment_count = parseInt(row.comment_count);
           });
-
-          return response.rows;
         }
+
+        return response.rows;
       });
     });
 };

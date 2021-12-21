@@ -269,18 +269,18 @@ describe("/GET /api/articles", () => {
         });
       });
   });
-  test("404 and no articles where valid topic has no articles associated", () => {
+  test.only("200 and empty articles array where valid topic has no articles associated", () => {
     return request(app)
       .get("/api/articles?topic=paper")
-      .expect(404)
+      .expect(200)
       .then((res) => {
-        expect(res.body.msg).toBe("No articles found");
+        expect(res.body.articles).toEqual([]);
       });
   });
-  test("400 Invalid topic for non-existent topic", () => {
+  test("404 Invalid topic for non-existent topic", () => {
     return request(app)
       .get("/api/articles?topic=sausages")
-      .expect(400)
+      .expect(404)
       .then((res) => {
         expect(res.body.msg).toBe("Invalid topic");
       });
@@ -323,12 +323,14 @@ describe("GET /api/articles/:article_id/comments", () => {
         });
       });
   });
-  test("Returns 404 'No comments found' for valid article with no comments", () => {
+  test.only("Returns 404 'No comments found' for valid article with no comments", () => {
     return request(app)
       .get("/api/articles/12/comments")
-      .expect(404)
+      .expect(200)
       .then((res) => {
-        expect(res.body.msg).toBe("No comments found");
+        // expect(res.body.msg).toBe("No comments found");
+        expect(res.body.comments).toEqual([]);
+        console.log(res.body);
       });
   });
   test("Returns 404 'article not found' for non-existent article_id", () => {
