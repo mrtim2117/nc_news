@@ -14,7 +14,7 @@ describe("GET /api", () => {
       .get("/api")
       .expect(200)
       .then((response) => {
-        expect(Object.keys(response.body.endpoints).length).toBe(9);
+        expect(Object.keys(response.body.endpoints).length).toBe(10);
       });
   });
 });
@@ -460,7 +460,39 @@ describe("/api/users", () => {
             })
           );
         });
-        console.log("Test: ", res.body);
+      });
+  });
+});
+describe("GET /api/users/:username", () => {
+  test("responds with user object for requested username", () => {
+    return request(app)
+      .get("/api/users/butter_bridge")
+      .expect(200)
+      .then((res) => {
+        expect(res.body.user).toEqual(
+          expect.objectContaining({
+            username: "butter_bridge",
+            name: "jonny",
+            avatar_url:
+              "https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg",
+          })
+        );
+      });
+  });
+  test("responds with 404 for non-existent username", () => {
+    return request(app)
+      .get("/api/users/snoopdog")
+      .expect(404)
+      .then((res) => {
+        expect(res.body.msg).toBe("No user for supplied username");
+      });
+  });
+  test("responds with 400 for invalid username (eg special characters)", () => {
+    return request(app)
+      .get("/api/users/£$22")
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe("Request invalid");
       });
   });
 });
