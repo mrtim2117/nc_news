@@ -496,3 +496,41 @@ describe("GET /api/users/:username", () => {
       });
   });
 });
+describe("PATCH /api/comments/:comment_id", () => {
+  test("Receives 200 and successfully increments votes on object with given comment_id", () => {
+    return request(app)
+      .patch("/api/comments/14")
+      .send({ inc_votes: 5 })
+      .expect(200)
+      .then((res) => {
+        expect(res.body.comment).toHaveProperty("comment_id", 14);
+        expect(res.body.comment).toHaveProperty("votes", 21);
+        expect(res.body.comment).toEqual(
+          expect.objectContaining({
+            author: expect.any(String),
+            article_id: expect.any(Number),
+            body: expect.any(String),
+            created_at: expect.any(String),
+          })
+        );
+      });
+  });
+  test("Receives 200 and successfully decrements votes on object with given comment_id", () => {
+    return request(app)
+      .patch("/api/comments/16")
+      .send({ inc_votes: -2 })
+      .expect(200)
+      .then((res) => {
+        expect(res.body.comment).toHaveProperty("comment_id", 16);
+        expect(res.body.comment).toHaveProperty("votes", -1);
+        expect(res.body.comment).toEqual(
+          expect.objectContaining({
+            author: expect.any(String),
+            article_id: expect.any(Number),
+            body: expect.any(String),
+            created_at: expect.any(String),
+          })
+        );
+      });
+  });
+});
