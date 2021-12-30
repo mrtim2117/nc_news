@@ -533,4 +533,57 @@ describe("PATCH /api/comments/:comment_id", () => {
         );
       });
   });
+  test("Receives 400 when no patch message body present", () => {
+    return request(app)
+      .patch("/api/comments/14")
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe("Request invalid");
+      });
+  });
+  test("Receives 400 when patch properties other than 'inc_votes' provided", () => {
+    return request(app)
+      .patch("/api/comments/1")
+      .send({ author: "DaveTheDev" })
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe("Request invalid");
+      });
+  });
+  test("Receives 400 when many patch properties other than 'inc_votes' provided", () => {
+    return request(app)
+      .patch("/api/comments/1")
+      .send({ author: "DevDave", votes: 5 })
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe("Request invalid");
+      });
+  });
+  test("Receives 400 when invalid data type 'inc_votes' provided", () => {
+    return request(app)
+      .patch("/api/comments/1")
+      .send({ inc_votes: "Add some votes" })
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe("Request invalid");
+      });
+  });
+  test("Receives 404 when patching non-existent article_id", () => {
+    return request(app)
+      .patch("/api/comments/500")
+      .send({ inc_votes: 2 })
+      .expect(404)
+      .then((res) => {
+        expect(res.body.msg).toBe("No comments for supplied ID");
+      });
+  });
+  test("Receives 400 when patching comment_id of incorrect datatype", () => {
+    return request(app)
+      .patch("/api/comments/sausages")
+      .send({ inc_votes: 4 })
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe("Request invalid");
+      });
+  });
 });
