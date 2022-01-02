@@ -14,7 +14,7 @@ describe("GET /api", () => {
       .get("/api")
       .expect(200)
       .then((response) => {
-        expect(Object.keys(response.body.endpoints).length).toBe(10);
+        expect(Object.keys(response.body.endpoints).length).toBe(11);
       });
   });
 });
@@ -188,13 +188,13 @@ describe("PATCH /api/articles/:article_id", () => {
   });
 });
 describe("/GET /api/articles", () => {
-  test("Returns and array of articles with correct structure", () => {
+  test("Returns and array of articles with correct structure and pagination (default 10 articles)", () => {
     return request(app)
       .get("/api/articles")
       .expect(200)
       .then((res) => {
         expect(Array.isArray(res.body.articles)).toBe(true);
-        expect(res.body.articles.length).toBe(12);
+        expect(res.body.articles.length).toBe(10);
         res.body.articles.forEach((article) => {
           expect(article).toEqual(
             expect.objectContaining({
@@ -210,6 +210,146 @@ describe("/GET /api/articles", () => {
         });
       });
   });
+  test("Returns and array of articles with correct structure and pagination (7 articles)", () => {
+    return request(app)
+      .get("/api/articles?limit=7")
+      .expect(200)
+      .then((res) => {
+        expect(Array.isArray(res.body.articles)).toBe(true);
+        expect(res.body.articles.length).toBe(7);
+        res.body.articles.forEach((article) => {
+          expect(article).toEqual(
+            expect.objectContaining({
+              author: expect.any(String),
+              title: expect.any(String),
+              article_id: expect.any(Number),
+              topic: expect.any(String),
+              created_at: expect.any(String),
+              votes: expect.any(Number),
+              comment_count: expect.any(Number),
+            })
+          );
+        });
+      });
+  });
+  test("Returns and array of articles with correct structure and pagination (2nd page with 2 articles)", () => {
+    return request(app)
+      .get("/api/articles?p=2")
+      .expect(200)
+      .then((res) => {
+        expect(Array.isArray(res.body.articles)).toBe(true);
+        expect(res.body.articles.length).toBe(2);
+        res.body.articles.forEach((article) => {
+          expect(article).toEqual(
+            expect.objectContaining({
+              author: expect.any(String),
+              title: expect.any(String),
+              article_id: expect.any(Number),
+              topic: expect.any(String),
+              created_at: expect.any(String),
+              votes: expect.any(Number),
+              comment_count: expect.any(Number),
+            })
+          );
+        });
+      });
+  });
+  test("Returns and array of articles with correct structure and pagination (2nd page with 2 articles)", () => {
+    return request(app)
+      .get("/api/articles?p=2&limit=4")
+      .expect(200)
+      .then((res) => {
+        expect(Array.isArray(res.body.articles)).toBe(true);
+        expect(res.body.articles.length).toBe(4);
+        res.body.articles.forEach((article) => {
+          expect(article).toEqual(
+            expect.objectContaining({
+              author: expect.any(String),
+              title: expect.any(String),
+              article_id: expect.any(Number),
+              topic: expect.any(String),
+              created_at: expect.any(String),
+              votes: expect.any(Number),
+              comment_count: expect.any(Number),
+            })
+          );
+        });
+      });
+  });
+  test("Returns and array of articles with correct structure and pagination (3rd page with 2 articles)", () => {
+    return request(app)
+      .get("/api/articles?p=3&limit=5")
+      .expect(200)
+      .then((res) => {
+        expect(Array.isArray(res.body.articles)).toBe(true);
+        expect(res.body.articles.length).toBe(2);
+        res.body.articles.forEach((article) => {
+          expect(article).toEqual(
+            expect.objectContaining({
+              author: expect.any(String),
+              title: expect.any(String),
+              article_id: expect.any(Number),
+              topic: expect.any(String),
+              created_at: expect.any(String),
+              votes: expect.any(Number),
+              comment_count: expect.any(Number),
+            })
+          );
+        });
+      });
+  });
+  test("Returns 400 for negative limit", () => {
+    return request(app)
+      .get("/api/articles?limit=-2")
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe("Invalid limit");
+      });
+  });
+  test("Returns 400 for invalid limit", () => {
+    return request(app)
+      .get("/api/articles?limit=sausages")
+      .expect(400)
+      .then((res) => {
+        console.log("test: ", res.body);
+        expect(res.body.msg).toBe("Request invalid");
+      });
+  });
+  test("Page * limit exceeds object count gives empty array", () => {
+    return request(app)
+      .get("/api/articles?limit=10&p=5")
+      .expect(200)
+      .then((res) => {
+        expect(res.body.articles).toEqual([]);
+      });
+  });
+  test("Page less than 1 gives 400", () => {
+    return request(app)
+      .get("/api/articles?p=0")
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe("Invalid page");
+      });
+  });
+  test("Negative page gives 400", () => {
+    return request(app)
+      .get("/api/articles?p=-3")
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe("Invalid page");
+      });
+  });
+  test("Not a page number gives 400", () => {
+    return request(app)
+      .get("/api/articles?p=sausages")
+      .expect(400)
+      .then((res) => {
+        console.log("test: ", res.body);
+      });
+  });
+
+  //// *** HERE ***
+
   test("Order defaults to descending created_at", () => {
     return request(app)
       .get("/api/articles")
@@ -263,7 +403,7 @@ describe("/GET /api/articles", () => {
           key: "created_at",
           descending: true,
         });
-        expect(res.body.articles.length).toBe(11);
+        expect(res.body.articles.length).toBe(10);
         res.body.articles.forEach((article) => {
           expect(article.topic).toBe("mitch");
         });

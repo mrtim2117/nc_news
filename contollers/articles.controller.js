@@ -30,13 +30,18 @@ const patchArticlebyId = (req, res, next) => {
 };
 
 const getArticles = (req, res, next) => {
-  const { sort_by, order, topic } = req.query;
+  const { sort_by, order, topic, limit, p } = req.query;
 
-  return selectArticles(sort_by, order, topic)
+  console.log(">>> getArticles: ", sort_by, order, topic, limit, p);
+
+  return selectArticles(sort_by, order, topic, limit, p)
     .then((articles) => {
-      return res.status(200).send({ articles });
+      const result = { articles };
+
+      return res.status(200).send(result);
     })
     .catch((err) => {
+      console.log(">>> getArticles: error", err);
       next(err);
     });
 };

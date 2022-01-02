@@ -51,7 +51,37 @@ const updateArticleById = (article_id, updateObject) => {
     });
 };
 
-const selectArticles = (sort_by = "created_at", order = "DESC", topic) => {
+const selectArticles = (
+  sort_by = "created_at",
+  order = "DESC",
+  topic,
+  limit = 10,
+  page
+) => {
+  console.log(">>> selectArticles: ", sort_by, order, topic, limit, page);
+
+  console.log(page, typeof page);
+
+  // Ensure we're able to use the page value
+  const ppage = parseInt(page);
+
+  console.log("ppage: ", ppage);
+
+  // if (Number.isNaN(ppage) || ppage < 1) {
+  if (page && (Number.isNaN(ppage) || ppage < 1)) {
+    // if (ppage < 1) {
+    console.log(">>> selectArticles line 69");
+    return Promise.reject({ status: 400, msg: "Invalid page" });
+  }
+
+  // Ensure we're able to use the limit value
+  const pLimit = parseInt(limit);
+
+  if (pLimit < 1) {
+    console.log(">>> selectArticles line 64");
+    return Promise.reject({ status: 400, msg: "Invalid limit" });
+  }
+
   // Check "sort_by" against valid list of fields, since pg doesn't
   // allow us to parameterise ORDER BY, hence attempt to reduce
   // SQL injection risk.
@@ -83,7 +113,9 @@ const selectArticles = (sort_by = "created_at", order = "DESC", topic) => {
       const sqlSelect = `SELECT articles.author, title, articles.article_id, articles.body, topic, articles.created_at, articles.votes, count(comments.article_id) AS comment_count `;
       const sqlFrom = `FROM articles LEFT JOIN comments ON articles.article_id = comments.article_id `;
       const sqlGroupBy = `GROUP BY articles.article_id `;
-      const sqlOrderBy = `ORDER BY ${sort_by} ${order}; `;
+      const sqlOrderBy = `ORDER BY ${sort_by} ${order} `;
+      const sqlLimit = `LIMIT ${pLimit} `;
+
       let sqlQuery = sqlSelect + sqlFrom;
 
       if (topic) {
@@ -100,6 +132,12 @@ const selectArticles = (sort_by = "created_at", order = "DESC", topic) => {
 
       sqlQuery += sqlGroupBy;
       sqlQuery += sqlOrderBy;
+      sqlQuery += sqlLimit;
+
+      if (Number.isInteger(ppage)) {
+        const offset = (ppage - 1) * pLimit;
+        sqlQuery += `OFFSET ${offset} `;
+      }
 
       return db.query(sqlQuery).then((response) => {
         if (response.rows.length > 0) {
@@ -111,6 +149,20 @@ const selectArticles = (sort_by = "created_at", order = "DESC", topic) => {
         return response.rows;
       });
     });
+};
+
+const selectArticleCount = (topic) => {
+  const sqlSelect = `SELECT articles.author, title, articles.article_id, articles.body, topic, articles.created_at, articles.votes, count(comments.article_id) AS comment_count `;
+  const sqlFrom = `FROM articles LEFT JOIN comments ON articles.article_id = comments.article_id `;
+  const sqlGroupBy = `GROUP BY articles.article_id `;
+
+  let sqlQuery = sqlSelect + sqlFrom;
+
+  if (topic) {
+    sqlQuery += `WHERE articles.topic = '${topic}' `;
+  }
+
+  sqlQuery += sqlGroupBy;
 };
 
 const checkIfArticleExists = (article_id) => {
