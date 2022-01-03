@@ -195,6 +195,7 @@ describe("/GET /api/articles", () => {
       .then((res) => {
         expect(Array.isArray(res.body.articles)).toBe(true);
         expect(res.body.articles.length).toBe(10);
+        expect(res.body.total_count).toBe(12);
         res.body.articles.forEach((article) => {
           expect(article).toEqual(
             expect.objectContaining({
@@ -216,6 +217,7 @@ describe("/GET /api/articles", () => {
       .expect(200)
       .then((res) => {
         expect(Array.isArray(res.body.articles)).toBe(true);
+        expect(res.body.total_count).toBe(12);
         expect(res.body.articles.length).toBe(7);
         res.body.articles.forEach((article) => {
           expect(article).toEqual(
@@ -238,6 +240,7 @@ describe("/GET /api/articles", () => {
       .expect(200)
       .then((res) => {
         expect(Array.isArray(res.body.articles)).toBe(true);
+        expect(res.body.total_count).toBe(12);
         expect(res.body.articles.length).toBe(2);
         res.body.articles.forEach((article) => {
           expect(article).toEqual(
@@ -260,6 +263,7 @@ describe("/GET /api/articles", () => {
       .expect(200)
       .then((res) => {
         expect(Array.isArray(res.body.articles)).toBe(true);
+        expect(res.body.total_count).toBe(12);
         expect(res.body.articles.length).toBe(4);
         res.body.articles.forEach((article) => {
           expect(article).toEqual(
@@ -283,6 +287,7 @@ describe("/GET /api/articles", () => {
       .then((res) => {
         expect(Array.isArray(res.body.articles)).toBe(true);
         expect(res.body.articles.length).toBe(2);
+        expect(res.body.total_count).toBe(12);
         res.body.articles.forEach((article) => {
           expect(article).toEqual(
             expect.objectContaining({
@@ -311,7 +316,6 @@ describe("/GET /api/articles", () => {
       .get("/api/articles?limit=sausages")
       .expect(400)
       .then((res) => {
-        console.log("test: ", res.body);
         expect(res.body.msg).toBe("Request invalid");
       });
   });
@@ -343,18 +347,14 @@ describe("/GET /api/articles", () => {
     return request(app)
       .get("/api/articles?p=sausages")
       .expect(400)
-      .then((res) => {
-        console.log("test: ", res.body);
-      });
+      .then((res) => {});
   });
-
-  //// *** HERE ***
-
   test("Order defaults to descending created_at", () => {
     return request(app)
       .get("/api/articles")
       .expect(200)
       .then((res) => {
+        expect(res.body.total_count).toBe(12);
         expect(res.body.articles).toBeSorted({
           key: "created_at",
           descending: true,
@@ -366,6 +366,7 @@ describe("/GET /api/articles", () => {
       .get("/api/articles?sort_by=article_id")
       .expect(200)
       .then((res) => {
+        expect(res.body.total_count).toBe(12);
         expect(res.body.articles).toBeSorted({
           key: "article_id",
           descending: true,
@@ -377,6 +378,7 @@ describe("/GET /api/articles", () => {
       .get("/api/articles?sort_by=votes&order=asc")
       .expect(200)
       .then((res) => {
+        expect(res.body.total_count).toBe(12);
         expect(res.body.articles).toBeSorted({
           key: "votes",
           descending: false,
@@ -388,6 +390,7 @@ describe("/GET /api/articles", () => {
       .get("/api/articles?sort_by=comment_count&order=desc")
       .expect(200)
       .then((res) => {
+        expect(res.body.total_count).toBe(12);
         expect(res.body.articles).toBeSorted({
           key: "comment_count",
           descending: true,
@@ -404,6 +407,7 @@ describe("/GET /api/articles", () => {
           descending: true,
         });
         expect(res.body.articles.length).toBe(10);
+        expect(res.body.total_count).toBe(11);
         res.body.articles.forEach((article) => {
           expect(article.topic).toBe("mitch");
         });
@@ -415,6 +419,7 @@ describe("/GET /api/articles", () => {
       .expect(200)
       .then((res) => {
         expect(res.body.articles).toEqual([]);
+        expect(res.body.total_count).toBe(0);
       });
   });
   test("404 Invalid topic for non-existent topic", () => {

@@ -1,6 +1,7 @@
 const {
   selectArticleById,
   updateArticleById,
+  selectArticleCount,
   selectArticles,
 } = require("../models/articles.model");
 
@@ -32,16 +33,22 @@ const patchArticlebyId = (req, res, next) => {
 const getArticles = (req, res, next) => {
   const { sort_by, order, topic, limit, p } = req.query;
 
-  console.log(">>> getArticles: ", sort_by, order, topic, limit, p);
+  let rowCount = 0;
 
-  return selectArticles(sort_by, order, topic, limit, p)
+  return selectArticleCount(topic)
+    .then((rows) => {
+      rowCount = rows.length;
+      return;
+    })
+    .then(() => {
+      return selectArticles(sort_by, order, topic, limit, p);
+    })
     .then((articles) => {
-      const result = { articles };
+      const result = { total_count: rowCount, articles: articles };
 
       return res.status(200).send(result);
     })
     .catch((err) => {
-      console.log(">>> getArticles: error", err);
       next(err);
     });
 };

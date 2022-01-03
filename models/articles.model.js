@@ -58,19 +58,10 @@ const selectArticles = (
   limit = 10,
   page
 ) => {
-  console.log(">>> selectArticles: ", sort_by, order, topic, limit, page);
-
-  console.log(page, typeof page);
-
   // Ensure we're able to use the page value
   const ppage = parseInt(page);
 
-  console.log("ppage: ", ppage);
-
-  // if (Number.isNaN(ppage) || ppage < 1) {
   if (page && (Number.isNaN(ppage) || ppage < 1)) {
-    // if (ppage < 1) {
-    console.log(">>> selectArticles line 69");
     return Promise.reject({ status: 400, msg: "Invalid page" });
   }
 
@@ -78,7 +69,6 @@ const selectArticles = (
   const pLimit = parseInt(limit);
 
   if (pLimit < 1) {
-    console.log(">>> selectArticles line 64");
     return Promise.reject({ status: 400, msg: "Invalid limit" });
   }
 
@@ -145,14 +135,13 @@ const selectArticles = (
             row.comment_count = parseInt(row.comment_count);
           });
         }
-
         return response.rows;
       });
     });
 };
 
 const selectArticleCount = (topic) => {
-  const sqlSelect = `SELECT articles.author, title, articles.article_id, articles.body, topic, articles.created_at, articles.votes, count(comments.article_id) AS comment_count `;
+  const sqlSelect = `SELECT articles.article_id, topic, count(comments.article_id) AS comment_count `;
   const sqlFrom = `FROM articles LEFT JOIN comments ON articles.article_id = comments.article_id `;
   const sqlGroupBy = `GROUP BY articles.article_id `;
 
@@ -163,6 +152,10 @@ const selectArticleCount = (topic) => {
   }
 
   sqlQuery += sqlGroupBy;
+
+  return db.query(sqlQuery).then((response) => {
+    return response.rows;
+  });
 };
 
 const checkIfArticleExists = (article_id) => {
@@ -179,5 +172,6 @@ module.exports = {
   selectArticleById,
   updateArticleById,
   selectArticles,
+  selectArticleCount,
   checkIfArticleExists,
 };
